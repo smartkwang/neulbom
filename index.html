@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>선착순 행사 예약 시스템</title>
+    <title>선착순 연수 예약 시스템</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <style>
-        /* Noto Sans KR 폰트 추가 (선택 사항) */
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
         body {
             font-family: 'Noto Sans KR', sans-serif;
         }
@@ -20,30 +18,23 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .time-slot.selected {
-            border: 2px solid #4F46E5; /* Indigo 600 */
-            background-color: #EEF2FF; /* Indigo 50 */
+            border: 2px solid #4F46E5;
+            background-color: #EEF2FF;
         }
         .time-slot.disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            background-color: #F3F4F6; /* Gray 100 */
-        }
-        /* 로딩 중 클릭 방지용 스타일 */
-        .pointer-events-none {
-            pointer-events: none;
         }
         .progress-bar {
             height: 0.5rem;
             border-radius: 0.25rem;
-            background-color: #E5E7EB; /* Gray 200 */
+            background-color: #E5E7EB;
         }
         .progress-fill {
             height: 100%;
             border-radius: 0.25rem;
-            background-color: #4F46E5; /* Indigo 600 */
-            transition: width 0.3s ease; /* 진행률 바 부드럽게 변경 */
+            background-color: #4F46E5;
         }
-        /* 유효성 검사 실패 시 흔들림 효과 */
         .shake {
             animation: shake 0.5s ease-in-out;
         }
@@ -52,27 +43,11 @@
             10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
             20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
-        /* 오류 필드 테두리 */
         .field-error {
-            border-color: #EF4444 !important; /* Red 500 */
+            border-color: #EF4444 !important;
         }
-        /* 기본 숨김 스타일 */
         .hidden {
             display: none;
-        }
-        /* 로딩 스피너 스타일 */
-        .loader {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #4F46E5; /* Indigo */
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            display: inline-block; /* 버튼 내부에 표시 */
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -80,7 +55,7 @@
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <!-- 헤더 -->
         <header class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-indigo-700 mb-2">선착순 행사 예약 시스템</h1>
+            <h1 class="text-3xl font-bold text-indigo-700 mb-2">선착순 연수 예약 시스템</h1>
             <p class="text-gray-600">2025년 5월 행사 예약</p>
             <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
                 <div class="flex">
@@ -89,509 +64,533 @@
                     </div>
                     <div class="ml-3">
                         <p class="text-sm text-yellow-700">
-                            본 행사는 각 타임당 20명씩 참가 가능합니다. 참가자는 전체 행사 중 오직 1타임만 참석할 수 있습니다. (동일 이메일 중복 신청 불가)
+                            본 행사는 각 타임당 20명씩, 하루 100명, 총 300명이 참가 가능합니다. 참가자는 전체 행사 중 오직 1타임만 참석할 수 있습니다.
                         </p>
                     </div>
                 </div>
             </div>
         </header>
-
-        <!-- 메인 폼 -->
-        <main class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            {/* novalidate 추가하여 HTML5 기본 유효성 검사 비활성화 */}
-            <form id="registrationForm" novalidate>
-                <!-- 날짜 및 시간 선택 섹션 -->
-                <section class="mb-8">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">1. 날짜 및 시간 선택 <span class="text-red-500">*</span></h2>
-
-                    <!-- 날짜 선택 탭 -->
-                    <div class="mb-6">
-                        <div class="flex border-b border-gray-200">
-                            {/* ★★★ 날짜 탭: data-date 값이 Apps Script/JS의 날짜와 일치해야 함 ★★★ */}
-                            <button type="button" class="date-tab flex-1 py-3 px-4 text-center font-medium border-b-2 border-indigo-500 text-indigo-600" data-date="2025-05-22">5월 22일 (목)</button>
-                            <button type="button" class="date-tab flex-1 py-3 px-4 text-center font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-date="2025-05-23">5월 23일 (금)</button>
-                            <button type="button" class="date-tab flex-1 py-3 px-4 text-center font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-date="2025-05-30">5월 30일 (금)</button>
-                        </div>
+<!-- 메인 폼 -->
+    <main class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <form id="registrationForm">
+            <!-- 날짜 및 시간 선택 섹션 -->
+            <section class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">1. 날짜 및 시간 선택</h2>
+                
+                <!-- 날짜 선택 탭 -->
+                <div class="mb-6">
+                    <div class="flex border-b border-gray-200">
+                        <button type="button" class="date-tab flex-1 py-3 px-4 text-center font-medium border-b-2 border-indigo-500 text-indigo-600" data-date="2025-05-22">5월 22일 (목)</button>
+                        <button type="button" class="date-tab flex-1 py-3 px-4 text-center font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-date="2025-05-23">5월 23일 (금)</button>
+                        <button type="button" class="date-tab flex-1 py-3 px-4 text-center font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-date="2025-05-30">5월 30일 (금)</button>
                     </div>
+                </div>
 
-                    <!-- 시간 선택 그리드 -->
-                    <div>
-                        {/* ★★★ 시간 슬롯: 각 날짜별 ID와 내부 슬롯의 data-date, data-time이 Apps Script/JS와 일치해야 함 ★★★ */}
-                        {/* 5월 22일 시간대 */}
-                        <div class="date-slots" id="slots-2025-05-22">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {/* 각 시간 슬롯 구조 */}
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="09:30-10:00">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="font-medium">09:30 - 10:00</span>
-                                        {/* slot-status 클래스명 확인 */}
-                                        <span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full">
-                                            <span class="remaining-count">--</span>/<span class="total-count">20</span>
-                                        </span>
-                                    </div>
-                                    <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                <!-- 시간 선택 그리드 -->
+                <div>
+                    <!-- 5월 22일 시간대 -->
+                    <div class="date-slots" id="slots-2025-05-22">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="09:30-10:00">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">09:30 - 10:00</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
                                 </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="10:00-10:30"> <div class="flex justify-between items-center mb-2"><span class="font-medium">10:00 - 10:30</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="10:30-11:00"> <div class="flex justify-between items-center mb-2"><span class="font-medium">10:30 - 11:00</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="11:00-11:30"> <div class="flex justify-between items-center mb-2"><span class="font-medium">11:00 - 11:30</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="11:30-12:00"> <div class="flex justify-between items-center mb-2"><span class="font-medium">11:30 - 12:00</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
                             </div>
-                        </div>
-                        {/* 5월 23일 시간대 */}
-                        <div class="date-slots hidden" id="slots-2025-05-23">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="09:30-10:00"> <div class="flex justify-between items-center mb-2"><span class="font-medium">09:30 - 10:00</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="10:00-10:30"> <div class="flex justify-between items-center mb-2"><span class="font-medium">10:00 - 10:30</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="10:30-11:00"> <div class="flex justify-between items-center mb-2"><span class="font-medium">10:30 - 11:00</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="11:00-11:30"> <div class="flex justify-between items-center mb-2"><span class="font-medium">11:00 - 11:30</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="11:30-12:00"> <div class="flex justify-between items-center mb-2"><span class="font-medium">11:30 - 12:00</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="10:00-10:30">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">10:00 - 10:30</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
                             </div>
-                        </div>
-                        {/* 5월 30일 시간대 */}
-                        <div class="date-slots hidden" id="slots-2025-05-30">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="09:30-10:00"> <div class="flex justify-between items-center mb-2"><span class="font-medium">09:30 - 10:00</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="10:00-10:30"> <div class="flex justify-between items-center mb-2"><span class="font-medium">10:00 - 10:30</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="10:30-11:00"> <div class="flex justify-between items-center mb-2"><span class="font-medium">10:30 - 11:00</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="11:00-11:30"> <div class="flex justify-between items-center mb-2"><span class="font-medium">11:00 - 11:30</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
-                                <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="11:30-12:00"> <div class="flex justify-between items-center mb-2"><span class="font-medium">11:30 - 12:00</span><span class="slot-status text-sm bg-gray-200 text-gray-700 py-1 px-2 rounded-full"><span class="remaining-count">--</span>/<span class="total-count">20</span></span></div> <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div> </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="10:30-11:00">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">10:30 - 11:00</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="11:00-11:30">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">11:00 - 11:30</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-22" data-time="11:30-12:00">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">11:30 - 12:00</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* 시간 선택 오류 메시지 */}
-                    <div class="mt-4 hidden text-red-500 text-sm" id="timeSelectionError">시간을 선택해주세요.</div>
-                    {/* 숨겨진 입력 필드 */}
-                    <input type="hidden" id="selectedDate" name="selectedDate">
-                    <input type="hidden" id="selectedTime" name="selectedTime">
-                    <input type="hidden" id="selectedDateTime" name="selectedDateTime">
-                </section>
-
-                <!-- 개인정보 입력 섹션 -->
-                <section class="mb-8">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">2. 개인정보 입력</h2>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">이름 <span class="text-red-500">*</span></label>
-                            <input type="text" id="name" name="name" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="홍길동" required>
-                            <div class="mt-1 hidden text-red-500 text-sm" id="nameError"></div> {/* 오류 메시지 내용 비움 */}
-                        </div>
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">이메일 <span class="text-red-500">*</span></label>
-                            <input type="email" id="email" name="email" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="example@example.com" required>
-                            <div class="mt-1 hidden text-red-500 text-sm" id="emailError"></div> {/* 오류 메시지 내용 비움 */}
-                        </div>
-                        <div>
-                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">연락처 <span class="text-red-500">*</span></label>
-                            <input type="tel" id="phone" name="phone" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="010-1234-5678 또는 01012345678" required>
-                            <div class="mt-1 hidden text-red-500 text-sm" id="phoneError"></div> {/* 오류 메시지 내용 비움 */}
+                    <!-- 5월 23일 시간대 -->
+                    <div class="date-slots hidden" id="slots-2025-05-23">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="09:30-10:00">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">09:30 - 10:00</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="10:00-10:30">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">10:00 - 10:30</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="10:30-11:00">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">10:30 - 11:00</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="11:00-11:30">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">11:00 - 11:30</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-23" data-time="11:30-12:00">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">11:30 - 12:00</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </section>
 
-                <!-- 개인정보 수집 동의 -->
-                <section class="mb-8">
-                    <div class="bg-gray-50 p-4 rounded-md">
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                <input id="consent" name="consent" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <!-- 5월 30일 시간대 -->
+                    <div class="date-slots hidden" id="slots-2025-05-30">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="09:30-10:00">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">09:30 - 10:00</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
                             </div>
-                            <div class="ml-3 text-sm">
-                                <label for="consent" class="font-medium text-gray-700">개인정보 수집 및 이용에 동의합니다. <span class="text-red-500">*</span></label>
-                                <p class="text-gray-500 mt-1">수집된 개인정보는 행사 참여 확인 및 안내를 위해서만 사용되며, 행사 종료 후 1개월 내 파기됩니다.</p>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="10:00-10:30">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">10:00 - 10:30</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="10:30-11:00">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">10:30 - 11:00</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="11:00-11:30">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">11:00 - 11:30</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="time-slot p-4 border rounded-lg cursor-pointer" data-date="2025-05-30" data-time="11:30-12:00">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">11:30 - 12:00</span>
+                                    <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded-full">
+                                        <span class="remaining-count">20</span>/<span class="total-count">20</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
                             </div>
                         </div>
-                        <div class="mt-1 hidden text-red-500 text-sm" id="consentError">개인정보 수집 및 이용에 동의해주세요.</div>
                     </div>
-                </section>
-
-                <!-- 제출 버튼 -->
-                <div class="text-center">
-                    <button type="submit" id="submitButton" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-6 rounded-md text-lg font-medium transition duration-300 transform hover:scale-105 flex items-center justify-center mx-auto">
-                        <span id="submitButtonText">예약하기</span>
-                        {/* 스피너는 기본 숨김 */}
-                        <span id="submitSpinner" class="loader hidden ml-2"></span>
-                    </button>
                 </div>
-            </form>
-        </main>
 
-        <!-- 성공 알림 모달 -->
-        <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-            {/* 배경 오버레이 */}
-            <div class="fixed inset-0 bg-black opacity-50" aria-hidden="true"></div>
-            {/* 모달 컨텐츠 */}
-            <div class="bg-white p-8 rounded-lg shadow-xl z-10 max-w-md w-full mx-4">
-                <div class="text-center">
-                    <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-2">예약 완료</h3>
-                    <p class="text-gray-600 mb-6" id="successMessage">예약이 성공적으로 완료되었습니다.</p>
-                    <div class="mt-6">
-                        <button type="button" class="close-modal px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">확인</button>
+                <div class="mt-4 hidden text-red-500" id="timeSelectionError">시간을 선택해주세요.</div>
+                <input type="hidden" id="selectedDate" name="selectedDate">
+                <input type="hidden" id="selectedTime" name="selectedTime">
+                <input type="hidden" id="selectedDateTime" name="selectedDateTime">
+            </section>
+
+            <!-- 개인정보 입력 섹션 -->
+            <section class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">2. 개인정보 입력</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">이름 <span class="text-red-500">*</span></label>
+                        <input type="text" id="name" name="name" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="홍길동" required>
+                        <div class="mt-1 hidden text-red-500 text-sm" id="nameError">이름을 입력해주세요.</div>
                     </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">이메일 <span class="text-red-500">*</span></label>
+                        <input type="email" id="email" name="email" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="example@example.com" required>
+                        <div class="mt-1 hidden text-red-500 text-sm" id="emailError">유효한 이메일 주소를 입력해주세요.</div>
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">연락처 <span class="text-red-500">*</span></label>
+                        <input type="tel" id="phone" name="phone" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="010-1234-5678" required>
+                        <div class="mt-1 hidden text-red-500 text-sm" id="phoneError">연락처를 입력해주세요.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 개인정보 수집 동의 -->
+            <section class="mb-8">
+                <div class="bg-gray-50 p-4 rounded-md">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="consent" name="consent" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="consent" class="font-medium text-gray-700">개인정보 수집 및 이용에 동의합니다. <span class="text-red-500">*</span></label>
+                            <p class="text-gray-500 mt-1">수집된 개인정보는 행사 참여 확인 및 안내를 위해서만 사용되며, 행사 종료 후 1개월 내 파기됩니다.</p>
+                        </div>
+                    </div>
+                    <div class="mt-1 hidden text-red-500 text-sm" id="consentError">개인정보 수집 및 이용에 동의해주세요.</div>
+                </div>
+            </section>
+
+            <!-- 제출 버튼 -->
+            <div class="text-center">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-6 rounded-md text-lg font-medium transition duration-300 transform hover:scale-105">
+                    예약하기
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <!-- 알림 모달 -->
+    <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        <div class="bg-white p-8 rounded-lg shadow-xl z-10 max-w-md w-full">
+            <div class="text-center">
+                <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">예약이 완료되었습니다!</h3>
+                <p class="text-gray-600 mb-6" id="successMessage"></p>
+                <div class="mt-6">
+                    <button type="button" class="close-modal px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">확인</button>
                 </div>
             </div>
         </div>
-
-         <!-- 오류 알림 모달 -->
-         <div id="errorModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-            {/* 배경 오버레이 */}
-            <div class="fixed inset-0 bg-black opacity-50" aria-hidden="true"></div>
-            {/* 모달 컨텐츠 */}
-            <div class="bg-white p-8 rounded-lg shadow-xl z-10 max-w-md w-full mx-4">
-                <div class="text-center">
-                    <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-2">예약 실패</h3>
-                    <p class="text-gray-600 mb-6" id="errorMessage">오류가 발생했습니다.</p>
-                    <div class="mt-6">
-                        <button type="button" class="close-modal px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">확인</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 푸터 -->
-        <footer class="text-center text-gray-500 text-sm mt-12">
-            <p>© 2025 행사 예약 시스템. All rights reserved.</p>
-        </footer>
     </div>
+
+    <!-- 푸터 -->
+    <footer class="text-center text-gray-500 text-sm mt-12">
+        <p>© 2025 행사 예약 시스템. All rights reserved.</p>
+    </footer>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- ★★★ 중요 설정 ★★★ ---
-        // 1. 본인의 배포된 웹 앱 URL로 반드시 교체하세요!
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6PebnLrnFdr1mANk03jlUn5ldl2Llj1CF7S-cSn49bNIcPZuB2_y1UjCaHr4ZNlJf3Q/exec';
-        // 2. 각 슬롯별 총 정원 (Apps Script doPost 함수의 capacity와 일치시켜야 함)
-        const totalCapacity = 20;
-        // --- 설정 끝 ---
+        // !!! 중요: 여기에 1단계에서 복사한 구글 앱스 스크립트 웹 앱 URL을 붙여넣으세요 !!!
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6PebnLrnFdr1mANk03jlUn5ldl2Llj1CF7S-cSn49bNIcPZuB2_y1UjCaHr4ZNlJf3Q/exec'; 
 
+        // 로컬 스토리지 데이터: 클라이언트 측에서 남은 자리 수를 보여주는 용도로 계속 사용합니다.
+        // 실제 최종 데이터는 구글 시트에 저장됩니다.
+        let reservations = JSON.parse(localStorage.getItem('eventReservations')) || {
+            '2025-05-22': { '09:30-10:00': [], '10:00-10:30': [], '10:30-11:00': [], '11:00-11:30': [], '11:30-12:00': [] },
+            '2025-05-23': { '09:30-10:00': [], '10:00-10:30': [], '10:30-11:00': [], '11:00-11:30': [], '11:30-12:00': [] },
+            '2025-05-30': { '09:30-10:00': [], '10:00-10:30': [], '10:30-11:00': [], '11:00-11:30': [], '11:30-12:00': [] }
+        };
 
-        // DOM 요소 참조
-        const form = document.getElementById('registrationForm');
-        const submitButton = document.getElementById('submitButton');
-        const submitButtonText = document.getElementById('submitButtonText');
-        const submitSpinner = document.getElementById('submitSpinner');
-        const successModal = document.getElementById('successModal');
-        const errorModal = document.getElementById('errorModal');
-        const successMessageEl = document.getElementById('successMessage');
-        const errorMessageEl = document.getElementById('errorMessage');
-        const selectedDateInput = document.getElementById('selectedDate');
-        const selectedTimeInput = document.getElementById('selectedTime');
-        const selectedDateTimeInput = document.getElementById('selectedDateTime');
-        const timeSelectionError = document.getElementById('timeSelectionError');
-        const nameInput = document.getElementById('name');
-        const emailInput = document.getElementById('email');
-        const phoneInput = document.getElementById('phone');
-        const consentInput = document.getElementById('consent');
-        const nameError = document.getElementById('nameError');
-        const emailError = document.getElementById('emailError');
-        const phoneError = document.getElementById('phoneError');
-        const consentError = document.getElementById('consentError');
+        // 페이지 로드 시 예약 상태 UI 업데이트
+        updateSlotStatus();
 
-
-        // 로컬 데이터 저장용
-        let reservations = JSON.parse(localStorage.getItem('eventReservations')) || initializeReservationsObject();
-
-        // 로컬 reservations 객체 초기화 (Apps Script allSlots와 일치해야 함)
-        function initializeReservationsObject() {
-             // ★★★ 이 부분의 날짜와 시간이 Apps Script의 allSlots 및 HTML 슬롯과 정확히 일치해야 합니다. ★★★
-            return {
-                '2025-05-22': {'09:30-10:00': [], '10:00-10:30': [], '10:30-11:00': [], '11:00-11:30': [], '11:30-12:00': []},
-                '2025-05-23': {'09:30-10:00': [], '10:00-10:30': [], '10:30-11:00': [], '11:00-11:30': [], '11:30-12:00': []},
-                '2025-05-30': {'09:30-10:00': [], '10:00-10:30': [], '10:30-11:00': [], '11:00-11:30': [], '11:30-12:00': []}
-            };
-        }
-
-        // 서버 카운트를 로컬 reservations 객체로 변환
-        function updateReservationsFromCounts(serverCounts) {
-             reservations = initializeReservationsObject(); // 초기화 먼저
-             for (const date in serverCounts) {
-                 if (reservations.hasOwnProperty(date)) {
-                     for (const time in serverCounts[date]) {
-                         if (reservations[date].hasOwnProperty(time)) {
-                             const count = parseInt(serverCounts[date][time] || 0, 10);
-                             if (!isNaN(count) && count >= 0) {
-                                 reservations[date][time] = new Array(count).fill(null);
-                             } else {
-                                 console.warn(`서버에서 받은 ${date} ${time}의 카운트 값이 유효하지 않습니다: ${serverCounts[date][time]}. 0으로 처리합니다.`);
-                                 reservations[date][time] = [];
-                             }
-                         } else {
-                             console.warn(`서버 응답에 정의되지 않은 시간 슬롯 포함: ${date} - ${time}`);
-                         }
-                     }
-                 } else {
-                      console.warn(`서버 응답에 정의되지 않은 날짜 포함: ${date}`);
-                 }
-             }
-             console.log("로컬 reservations 객체 업데이트 완료:", JSON.parse(JSON.stringify(reservations)));
-         }
-
-
-        // 슬롯 임시 비활성화/활성화
-        function disableAllSlotsTemporarily(disable) {
-            document.querySelectorAll('.time-slot').forEach(slot => {
-                if (disable) {
-                    slot.classList.add('opacity-50', 'pointer-events-none');
-                } else {
-                    slot.classList.remove('opacity-50', 'pointer-events-none');
-                }
-            });
-        }
-
-        // 슬롯 UI 업데이트
-        function updateSlotStatus() {
-             console.log("UI 업데이트 시작.");
-
-             document.querySelectorAll('.time-slot').forEach(slot => {
-                 const date = slot.getAttribute('data-date');
-                 const time = slot.getAttribute('data-time');
-                 let registeredCount = 0;
-
-                 if (reservations.hasOwnProperty(date) && reservations[date].hasOwnProperty(time)) {
-                     registeredCount = reservations[date][time].length;
-                 } else {
-                     console.warn(`UI 업데이트 중 정의되지 않은 슬롯 발견: ${date} ${time}`);
-                 }
-
-                 const remaining = Math.max(0, totalCapacity - registeredCount);
-                 const percentage = totalCapacity > 0 ? Math.max(0, Math.min(100, (registeredCount / totalCapacity) * 100)) : 0;
-
-                 const remainingCountEl = slot.querySelector('.remaining-count');
-                 const totalCountEl = slot.querySelector('.total-count');
-                 const progressBarFill = slot.querySelector('.progress-fill');
-                 const slotStatusBadge = slot.querySelector('.slot-status');
-
-                 if (remainingCountEl) remainingCountEl.textContent = remaining;
-                 if (totalCountEl) totalCountEl.textContent = totalCapacity;
-                 if (progressBarFill) progressBarFill.style.width = `${percentage}%`;
-
-                 slot.classList.remove('disabled');
-                 if (slotStatusBadge) {
-                      slotStatusBadge.className = 'slot-status text-sm py-1 px-2 rounded-full';
-                 }
-                 if (progressBarFill) progressBarFill.style.backgroundColor = '#4F46E5';
-
-                 if (remaining <= 0) {
-                     slot.classList.add('disabled');
-                     if (slotStatusBadge) slotStatusBadge.classList.add('bg-red-100', 'text-red-800');
-                     if (progressBarFill) progressBarFill.style.backgroundColor = '#EF4444';
-                 } else if (remaining <= 5) {
-                     if (slotStatusBadge) slotStatusBadge.classList.add('bg-yellow-100', 'text-yellow-800');
-                     if (progressBarFill) progressBarFill.style.backgroundColor = '#F59E0B';
-                 } else {
-                     if (slotStatusBadge) slotStatusBadge.classList.add('bg-green-100', 'text-green-800');
-                 }
-
-                 const selectedDT = selectedDateTimeInput.value;
-                 if (`${date} ${time}` === selectedDT) {
-                     slot.classList.add('selected');
-                 } else {
-                     slot.classList.remove('selected');
-                 }
-             });
-             console.log("UI 업데이트 완료.");
-         }
-
-
-        // 서버에서 최신 예약 현황 가져오기
-        function fetchAndUpdateCounts() {
-            console.log("서버에서 최신 예약 현황 가져오는 중...");
-            if (!SCRIPT_URL || SCRIPT_URL === '여기에_배포된_웹_앱_URL을_붙여넣으세요') {
-                 console.error("스크립트 URL이 설정되지 않았습니다!");
-                 errorMessageEl.textContent = "시스템 설정 오류입니다. 관리자에게 문의하세요. (URL 미설정)";
-                 errorModal.classList.remove('hidden');
-                 reservations = JSON.parse(localStorage.getItem('eventReservations')) || initializeReservationsObject();
-                 updateSlotStatus();
-                 return;
-            }
-
-            document.body.style.cursor = 'wait';
-            disableAllSlotsTemporarily(true);
-
-            fetch(SCRIPT_URL + "?action=getCounts")
-                .then(response => {
-                    if (!response.ok) {
-                         return response.text().then(text => {
-                             throw new Error(`서버 응답 오류 (${response.status}): ${text || response.statusText}`);
-                         });
-                    }
-                    return response.json();
-                })
-                .then(serverCounts => {
-                    console.log("서버로부터 받은 예약 현황:", serverCounts);
-                    updateReservationsFromCounts(serverCounts);
-                    localStorage.setItem('eventReservations', JSON.stringify(reservations));
-                    console.log("로컬 스토리지 업데이트 완료.");
-                    updateSlotStatus();
-                })
-                .catch(error => {
-                    console.error("최신 예약 현황 가져오기 실패:", error);
-                    errorMessageEl.textContent = `예약 현황을 불러오는 중 오류가 발생했습니다: ${error.message}. 잠시 후 새로고침하거나 관리자에게 문의하세요.`;
-                    errorModal.classList.remove('hidden');
-                    reservations = JSON.parse(localStorage.getItem('eventReservations')) || initializeReservationsObject();
-                    updateSlotStatus();
-                })
-                .finally(() => {
-                    console.log("예약 현황 업데이트 로직 완료.");
-                    document.body.style.cursor = 'default';
-                    disableAllSlotsTemporarily(false);
-                });
-        }
-
-        // 페이지 로드 시 실행
-        fetchAndUpdateCounts();
-
-
-        // --- 이벤트 리스너들 ---
-
-        // 날짜 탭 클릭
+        // 날짜 탭 클릭 이벤트 (기존 코드 유지)
         document.querySelectorAll('.date-tab').forEach(tab => {
             tab.addEventListener('click', function() {
-                // 모든 탭 스타일 초기화
-                document.querySelectorAll('.date-tab').forEach(t => {
+                // ... (기존 탭 전환 로직) ...
+                 document.querySelectorAll('.date-tab').forEach(t => {
                     t.classList.remove('border-indigo-500', 'text-indigo-600');
-                    t.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                    t.classList.add('border-transparent', 'text-gray-500');
                 });
-                // 클릭된 탭 스타일 활성화
+                this.classList.remove('border-transparent', 'text-gray-500');
                 this.classList.add('border-indigo-500', 'text-indigo-600');
-                this.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
 
-                // 해당 날짜의 슬롯 보여주기
                 const dateId = this.getAttribute('data-date');
-                document.querySelectorAll('.date-slots').forEach(slotDiv => {
-                    slotDiv.classList.add('hidden');
+                document.querySelectorAll('.date-slots').forEach(slot => {
+                    slot.classList.add('hidden');
                 });
-                const targetSlots = document.getElementById(`slots-${dateId}`);
-                if (targetSlots) {
-                    targetSlots.classList.remove('hidden');
-                }
-                // (선택사항) 날짜 변경 시 시간 선택 초기화
-                // clearTimeSelection();
+                document.getElementById(`slots-${dateId}`).classList.remove('hidden');
             });
         });
 
-        // 시간 슬롯 클릭
+
+        // 시간 슬롯 클릭 이벤트 (숨겨진 필드 값 설정 추가)
         document.querySelectorAll('.time-slot').forEach(slot => {
             slot.addEventListener('click', function() {
-                if (this.classList.contains('disabled') || this.classList.contains('opacity-50')) {
-                    return; // 비활성화 또는 로딩 중 클릭 방지
+                if (this.classList.contains('disabled')) {
+                    return; // 마감된 슬롯 클릭 방지
                 }
-                // 이전 선택 해제
-                document.querySelectorAll('.time-slot.selected').forEach(s => {
+                // 모든 슬롯 선택 해제
+                document.querySelectorAll('.time-slot').forEach(s => {
                     s.classList.remove('selected');
                 });
                 // 현재 슬롯 선택
                 this.classList.add('selected');
-
+                
                 const date = this.getAttribute('data-date');
                 const time = this.getAttribute('data-time');
+                
+                // 새로 추가한 숨겨진 필드에 값 설정
+                document.getElementById('selectedDate').value = date;
+                document.getElementById('selectedTime').value = time;
+                document.getElementById('selectedDateTime').value = `${date} ${time}`; // 필요시 기존 필드도 유지
 
-                // 숨겨진 필드 값 설정
-                selectedDateInput.value = date;
-                selectedTimeInput.value = time;
-                selectedDateTimeInput.value = `${date} ${time}`;
-                timeSelectionError.classList.add('hidden'); // 오류 메시지 숨김
+                // 시간 선택 오류 메시지 숨기기
+                document.getElementById('timeSelectionError').classList.add('hidden');
             });
         });
 
-        // 시간 선택 초기화 함수 (선택적 사용)
-        function clearTimeSelection() {
-             document.querySelectorAll('.time-slot.selected').forEach(s => s.classList.remove('selected'));
-             selectedDateInput.value = '';
-             selectedTimeInput.value = '';
-             selectedDateTimeInput.value = '';
-             timeSelectionError.classList.add('hidden');
-        }
+
+        // 예약 폼 제출 이벤트 (★★★ 핵심 수정 부분 ★★★)
+        const form = document.getElementById('registrationForm');
+        const submitButton = form.querySelector('button[type="submit"]'); // 제출 버튼 요소 가져오기
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // 폼 기본 제출 동작(페이지 새로고침) 방지
+            
+            // 1. 클라이언트 측 유효성 검사 (필수 항목 입력 확인 등)
+            if (!validateForm()) {
+                return; // 유효성 검사 실패 시 중단
+            }
+
+            // 2. 제출 버튼 비활성화 (중복 제출 방지)
+            submitButton.disabled = true;
+            submitButton.textContent = '예약 처리 중...';
+            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // 3. 폼 데이터를 FormData 객체로 준비 (앱스 스크립트로 보내기 위함)
+            const formData = new FormData(form);
+            
+            // (선택 사항) 클라이언트 측에서 로컬 저장소 기준으로 이메일 중복 미리 확인
+             const emailToCheck = formData.get('email');
+             if (isEmailAlreadyRegisteredLocally(emailToCheck)) {
+                  alert('이미 해당 이메일로 예약된 내역이 있는 것 같습니다. (브라우저 확인)');
+                  // 버튼 다시 활성화
+                  submitButton.disabled = false;
+                  submitButton.textContent = '예약하기';
+                  submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                  return; // 중복이면 서버 전송 중단
+              }
+
+            // 4. fetch API를 사용하여 앱스 스크립트 URL로 데이터 전송 (POST 방식)
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData // FormData 객체를 body에 담아 보냄
+            })
+            .then(response => response.json()) // 앱스 스크립트로부터 JSON 응답 받기
+            .then(data => {
+                // 5. 앱스 스크립트 응답 처리
+                console.log('Google Apps Script 응답:', data); // 개발자 도구 콘솔에서 확인
+                if (data.result === "success") {
+                    // 5-1. 성공 시: 로컬 상태 업데이트 및 UI 반영
+                    const date = formData.get('selectedDate');
+                    const time = formData.get('selectedTime');
+                    
+                    // 로컬 저장소에도 예약 정보 추가 (UI 즉시 반영용)
+                     if (reservations[date] && reservations[date][time]) {
+                         reservations[date][time].push({
+                            name: formData.get('name'),
+                            email: formData.get('email'),
+                            phone: formData.get('phone'),
+                            registrationTime: new Date().toISOString() // ISO 형식 시간 기록
+                        });
+                        localStorage.setItem('eventReservations', JSON.stringify(reservations));
+                     } else {
+                        console.error("로컬 예약 데이터 업데이트 오류:", date, time);
+                     }
+
+                    // 슬롯 상태 UI 업데이트 (남은 자리, 진행률 바)
+                    updateSlotStatus();
+
+                    // 성공 알림 모달 표시
+                    showSuccessModal(date, time);
+
+                    // 폼 초기화
+                    resetForm();
+
+                } else {
+                    // 5-2. 실패 시 (앱스 스크립트가 에러 반환): 에러 메시지 표시
+                    console.error('Google Apps Script 오류:', data.message);
+                    alert(`예약 실패: ${data.message || '알 수 없는 서버 오류가 발생했습니다.'}`);
+                    // 이 경우, 로컬 상태는 변경하지 않음
+                }
+            })
+            .catch(error => {
+                // 6. 네트워크 오류 등 fetch 자체의 실패 처리
+                console.error('폼 제출 오류:', error);
+                alert('예약 요청 중 네트워크 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.');
+            })
+            .finally(() => {
+                // 7. 성공/실패 여부와 관계없이 버튼 다시 활성화
+                submitButton.disabled = false;
+                submitButton.textContent = '예약하기';
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+        });
 
 
-        // 폼 유효성 검사 함수
+        // 모달 닫기 버튼 이벤트 (기존 코드 유지)
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                document.getElementById('successModal').classList.add('hidden');
+            });
+        });
+
+        // 폼 유효성 검사 함수 (수정: 숨겨진 날짜/시간 필드 검사 추가)
         function validateForm() {
             let isValid = true;
-            // 오류 메시지 및 스타일 초기화
-            timeSelectionError.classList.add('hidden');
-            nameError.classList.add('hidden'); nameInput.classList.remove('field-error');
-            emailError.classList.add('hidden'); emailInput.classList.remove('field-error');
-            phoneError.classList.add('hidden'); phoneInput.classList.remove('field-error');
-            consentError.classList.add('hidden'); consentInput.closest('div.bg-gray-50').classList.remove('shake');
-
-            // 1. 시간 선택 확인
-            if (!selectedDateInput.value || !selectedTimeInput.value) {
-                timeSelectionError.classList.remove('hidden');
-                isValid = false;
-            }
-
-            // 2. 이름 확인
-            if (!nameInput.value.trim()) {
-                nameError.textContent = '이름을 입력해주세요.';
+            
+            // 시간 선택 확인 (숨겨진 필드 값 확인)
+             const selectedDate = document.getElementById('selectedDate').value;
+             const selectedTime = document.getElementById('selectedTime').value;
+             const timeErrorDiv = document.getElementById('timeSelectionError');
+             if (!selectedDate || !selectedTime) {
+                 timeErrorDiv.classList.remove('hidden');
+                 // 시간 선택 영역으로 스크롤 (사용자 경험 개선)
+                 timeErrorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                 isValid = false;
+             } else {
+                 timeErrorDiv.classList.add('hidden');
+             }
+            
+            // --- 나머지 필드 유효성 검사는 기존 코드 유지 ---
+            const name = document.getElementById('name');
+            const nameError = document.getElementById('nameError');
+            if (!name.value.trim()) {
                 nameError.classList.remove('hidden');
-                nameInput.classList.add('field-error');
+                name.classList.add('field-error');
                 isValid = false;
+            } else {
+                nameError.classList.add('hidden');
+                name.classList.remove('field-error');
             }
-
-            // 3. 이메일 확인
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const emailValue = emailInput.value.trim();
-            if (!emailValue) {
-                emailError.textContent = '이메일 주소를 입력해주세요.';
+            
+            const email = document.getElementById('email');
+            const emailError = document.getElementById('emailError');
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // 간단한 이메일 형식 검사
+            if (!email.value.trim() || !emailPattern.test(email.value)) {
+                emailError.textContent = '유효한 이메일 주소를 입력해주세요.';
                 emailError.classList.remove('hidden');
-                emailInput.classList.add('field-error');
+                email.classList.add('field-error');
                 isValid = false;
-            } else if (!emailPattern.test(emailValue)) {
-                emailError.textContent = '유효한 이메일 형식이 아닙니다.';
-                emailError.classList.remove('hidden');
-                emailInput.classList.add('field-error');
-                isValid = false;
+            } else {
+                emailError.classList.add('hidden');
+                email.classList.remove('field-error');
             }
-
-            // 4. 연락처 확인 (하이픈 제거 후 숫자 10~11자리)
-            const phoneValue = phoneInput.value.replace(/-/g, '').trim();
-            const phonePattern = /^(01[016789])\d{7,8}$/; // 010/011/016/017/018/019 + 7~8자리 숫자
-            if (!phoneValue) {
+            
+            const phone = document.getElementById('phone');
+            const phoneError = document.getElementById('phoneError');
+             // 간단히 비어있는지만 확인. 필요시 정규식 패턴 추가 가능 (예: /^\d{3}-\d{3,4}-\d{4}$/)
+            if (!phone.value.trim()) {
                 phoneError.textContent = '연락처를 입력해주세요.';
                 phoneError.classList.remove('hidden');
-                phoneInput.classList.add('field-error');
-                isValid = false;
-            } else if (!phonePattern.test(phoneValue)) {
-                phoneError.textContent = "유효한 연락처 형식이 아닙니다 ('-' 없이 숫자만 10~11자리).";
-                phoneError.classList.remove('hidden');
-                phoneInput.classList.add('field-error');
-                isValid = false;
+                phone.classList.add('field-error');
+                 isValid = false;
+            } else {
+                phoneError.classList.add('hidden');
+                phone.classList.remove('field-error');
             }
-
-            // 5. 개인정보 동의 확인
-            if (!consentInput.checked) {
+            
+            const consent = document.getElementById('consent');
+            const consentError = document.getElementById('consentError');
+            if (!consent.checked) {
                 consentError.classList.remove('hidden');
-                const consentBox = consentInput.closest('div.bg-gray-50');
-                if (consentBox) consentBox.classList.add('shake');
+                // 동의 체크박스 부분 시각적 강조 (흔들림 효과)
+                consent.closest('div.bg-gray-50').classList.add('shake'); 
+                setTimeout(() => consent.closest('div.bg-gray-50').classList.remove('shake'), 500); // 0.5초 후 효과 제거
                 isValid = false;
+            } else {
+                consentError.classList.add('hidden');
             }
+            // --- 유효성 검사 끝 ---
 
-            // 첫번째 오류 필드로 포커스/스크롤 이동
-            if (!isValid) {
-                 const errorElements = [
-                     { el: timeSelectionError, focusTarget: document.querySelector('.date-tab.border-indigo-500') }, // 시간 오류 시 활성 탭 부근으로 스크롤
-                     { el: nameError, focusTarget: nameInput },
-                     { el: emailError, focusTarget: emailInput },
-                     { el: phoneError, focusTarget: phoneInput },
-                     { el: consentError, focusTarget: consentInput }
-                 ];
+             // 유효성 검사 실패 시 첫 번째 오류 필드로 포커스 이동
+             if (!isValid) {
+                 const firstErrorField = form.querySelector('.field-error');
+                 const firstErrorMsg = form.querySelector('.text-red-500:not(.hidden)'); // 보이는 첫 에러 메시지
 
-                 for (const item of errorElements) {
-                     if (!item.el.classList.contains('hidden')) {
-                         if (item.focusTarget && typeof item.focusTarget.focus === 'function') {
-                             item.focusTarget.focus();
-                             // 포커스된 요소가 화면에 잘 보이도록 스크롤 (옵션)
-                             item.focusTarget.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-                         } else if (item.focusTarget) {
-                            // 포커스 불가능 요소(탭 버튼 등)는 스크롤만
-                             item.focusTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                         }
-                         break; // 첫 오류 처리 후 중단
-                     }
+                 if (firstErrorField) {
+                     firstErrorField.focus(); // 입력 필드에 포커스
+                      firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                 } else if (firstErrorMsg && firstErrorMsg.id === 'timeSelectionError') {
+                     // 시간 선택 오류 시 시간 슬롯 영역으로 이동
+                     document.querySelector('.time-slot')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                 } else if (firstErrorMsg && firstErrorMsg.id === 'consentError') {
+                     // 동의 오류 시 동의 체크박스로 이동
+                     consent.focus();
+                     consent.scrollIntoView({ behavior: 'smooth', block: 'center' });
                  }
-                 // 폼 전체 흔들기 효과
+
+                 // 전체 폼 흔들림 효과로 시각적 피드백 강화
                  form.classList.add('shake');
                  setTimeout(() => form.classList.remove('shake'), 500);
              }
@@ -599,159 +598,95 @@
             return isValid;
         }
 
-        // 폼 제출 이벤트 리스너
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            if (!validateForm()) return;
-
-             if (!SCRIPT_URL || SCRIPT_URL === '여기에_배포된_웹_앱_URL을_붙여넣으세요') {
-                 console.error("스크립트 URL이 설정되지 않았습니다! 폼 제출 불가.");
-                 errorMessageEl.textContent = "시스템 설정 오류로 예약을 처리할 수 없습니다. 관리자에게 문의하세요. (URL 미설정)";
-                 errorModal.classList.remove('hidden');
-                 return;
-             }
-
-            // 제출 버튼 상태 변경
-            submitButton.disabled = true;
-            submitButtonText.textContent = '예약 처리 중';
-            submitSpinner.classList.remove('hidden');
-
-            // 전송 데이터 준비
-            const reservationData = {
-                selectedDate: selectedDateInput.value,
-                selectedTime: selectedTimeInput.value,
-                name: nameInput.value.trim(),
-                email: emailInput.value.trim(),
-                phone: phoneInput.value.replace(/-/g, '').trim() // 하이픈 제거된 값
-            };
-
-            console.log("서버로 전송할 데이터:", reservationData);
-
-            // 서버로 데이터 전송
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                // mode: 'cors', // CORS는 Apps Script에서 doOptions로 처리하므로 보통 불필요
-                headers: {
-                    'Content-Type': 'application/json' // JSON 명시
-                },
-                body: JSON.stringify(reservationData) // JSON 문자열로 변환
-            })
-            .then(response => {
-                 if (!response.ok) {
-                     return response.json().then(errData => {
-                          throw new Error(errData.message || `서버 응답 오류 (${response.status} ${response.statusText})`);
-                     }).catch(jsonError => {
-                         console.error("서버 에러 응답 JSON 파싱 실패:", jsonError);
-                         throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`);
-                     });
-                 }
-                 return response.json();
-            })
-            .then(data => {
-                console.log('Google Apps Script 응답:', data);
-                if (data && data.result === "success") {
-                    // 성공 처리
-                    const date = reservationData.selectedDate;
-                    const time = reservationData.selectedTime;
-
-                    // 로컬 데이터 업데이트 (UX 개선)
-                    if (reservations.hasOwnProperty(date) && reservations[date].hasOwnProperty(time)) {
-                         reservations[date][time].push(null);
-                         localStorage.setItem('eventReservations', JSON.stringify(reservations));
-                         updateSlotStatus(); // UI 즉시 업데이트
-                    } else {
-                        console.warn(`예약 성공 응답 받았으나 로컬 데이터 구조에 해당 슬롯(${date} ${time})이 없어 즉시 업데이트 불가. 서버 재동기화 필요.`);
-                        fetchAndUpdateCounts(); // 서버와 재동기화
+        // 로컬 저장소 기준 이메일 중복 확인 함수 (클라이언트 측 예비 확인용)
+        function isEmailAlreadyRegisteredLocally(email) {
+            for (const date in reservations) {
+                for (const time in reservations[date]) {
+                    // 각 시간대 배열 순회
+                    for (const registration of reservations[date][time]) {
+                        if (registration.email === email) {
+                            return true; // 중복 발견
+                        }
                     }
-
-                    // 성공 모달 표시
-                    successMessageEl.textContent = `${formatDate(date)}, ${time} 시간대에 예약이 성공적으로 완료되었습니다.`;
-                    successModal.classList.remove('hidden');
-                    resetForm(); // 폼 초기화
-                } else {
-                    // 서버 로직상 에러 (result: "error")
-                    throw new Error(data.message || '알 수 없는 서버 오류가 발생했습니다.');
                 }
-            })
-            .catch(error => {
-                // 네트워크 오류 또는 처리 중 발생한 모든 에러
-                console.error('폼 제출 또는 응답 처리 중 오류:', error);
-                errorMessageEl.textContent = `예약 처리 중 오류가 발생했습니다: ${error.message}. 잠시 후 다시 시도해주세요.`;
-                errorModal.classList.remove('hidden');
-                 // 오류 발생 시 최신 상태 반영 위해 서버 카운트 다시 가져오기
-                 fetchAndUpdateCounts();
-            })
-            .finally(() => {
-                // 제출 버튼 상태 복구
-                submitButton.disabled = false;
-                submitButtonText.textContent = '예약하기';
-                submitSpinner.classList.add('hidden');
-            });
-        });
-
-
-        // 날짜 형식 변환 함수 (YYYY년 M월 D일 (요일))
-        function formatDate(dateString) {
-             try {
-                 // ISO 8601 형식으로 만들어 Date 객체 생성 (시간대 문제 최소화 시도)
-                 const date = new Date(dateString + 'T00:00:00');
-                 if (isNaN(date)) throw new Error("Invalid date format"); // 날짜 파싱 실패 시
-
-                 const year = date.getFullYear();
-                 const month = date.getMonth() + 1;
-                 const day = date.getDate();
-                 // 로컬 시간 기준 요일 계산
-                 const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
-                 return `${year}년 ${month}월 ${day}일 (${dayOfWeek})`;
-             } catch (e) {
-                 console.error("날짜 형식 변환 오류:", dateString, e);
-                 return dateString; // 오류 시 원본 반환
-             }
-         }
-
-        // 폼 초기화 함수
-        function resetForm() {
-            form.reset(); // 기본 리셋 (input 값, 체크박스 해제 등)
-            // 숨겨진 값 초기화
-            selectedDateInput.value = '';
-            selectedTimeInput.value = '';
-            selectedDateTimeInput.value = '';
-            // 선택된 슬롯 스타일 제거
-            document.querySelectorAll('.time-slot.selected').forEach(s => s.classList.remove('selected'));
-            // 모든 에러 메시지 숨기기
-            timeSelectionError.classList.add('hidden');
-            nameError.classList.add('hidden'); nameInput.classList.remove('field-error');
-            emailError.classList.add('hidden'); emailInput.classList.remove('field-error');
-            phoneError.classList.add('hidden'); phoneInput.classList.remove('field-error');
-            consentError.classList.add('hidden'); consentInput.closest('div.bg-gray-50').classList.remove('shake');
-            // 첫번째 날짜 탭을 다시 활성화 (선택적)
-             const firstTab = document.querySelector('.date-tab');
-             if (firstTab && !firstTab.classList.contains('border-indigo-500')) {
-                // 현재 활성화된 탭이 아니면 클릭 이벤트 트리거
-                firstTab.click();
-             }
+            }
+            return false; // 중복 없음
         }
 
-        // 모달 닫기 이벤트 (성공/오류 공통)
-        document.querySelectorAll('.close-modal').forEach(button => {
-            button.addEventListener('click', function() {
-                this.closest('.fixed.inset-0.flex').classList.add('hidden');
+        // 예약 슬롯 상태 UI 업데이트 함수 (기존 코드 유지, 오류 방지 강화)
+        function updateSlotStatus() {
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                const date = slot.getAttribute('data-date');
+                const time = slot.getAttribute('data-time');
+                
+                // 해당 날짜/시간 데이터가 없으면 0으로 처리 (오류 방지)
+                 const registered = (reservations[date] && reservations[date][time]) ? reservations[date][time].length : 0;
+
+                const total = 20; // 시간당 최대 인원
+                const remaining = total - registered;
+                
+                // 남은 자리 수 표시 (음수 방지)
+                slot.querySelector('.remaining-count').textContent = Math.max(0, remaining);
+                
+                // 진행률 바 업데이트 (0% ~ 100% 범위 유지)
+                const percentage = Math.max(0, Math.min(100, (registered / total) * 100));
+                slot.querySelector('.progress-fill').style.width = `${percentage}%`;
+                
+                // 상태에 따른 스타일 변경 (기존 로직 유지)
+                const countBadge = slot.querySelector('span.text-sm');
+                const progressBarFill = slot.querySelector('.progress-fill');
+
+                // 기존 클래스 초기화
+                slot.classList.remove('disabled');
+                countBadge.classList.remove('bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-red-100', 'text-red-800');
+                progressBarFill.style.backgroundColor = '#4F46E5'; // 기본 파란색
+
+                if (remaining <= 0) {
+                    slot.classList.add('disabled'); // 마감 처리
+                    countBadge.classList.add('bg-red-100', 'text-red-800');
+                    progressBarFill.style.backgroundColor = '#EF4444'; // 빨간색
+                } else if (remaining <= 5) { // 마감 임박 (예: 5명 이하)
+                    countBadge.classList.add('bg-yellow-100', 'text-yellow-800');
+                    progressBarFill.style.backgroundColor = '#F59E0B'; // 주황색
+                } else { // 여유 있음
+                    countBadge.classList.add('bg-green-100', 'text-green-800');
+                    // progressBarFill 색상은 기본 파란색 유지
+                }
             });
-        });
+        }
 
-        // 모달 배경 클릭 시 닫기 (선택 사항)
-        document.querySelectorAll('.fixed.inset-0.bg-black.opacity-50').forEach(overlay => {
-             overlay.addEventListener('click', function() {
-                 // 연결된 모달 찾아서 닫기
-                 const modal = this.closest('.fixed.inset-0.flex');
-                 if (modal) {
-                     modal.classList.add('hidden');
-                 }
-             });
-         });
+        // 성공 모달 표시 함수 (기존 코드 유지)
+        function showSuccessModal(date, time) {
+            const formattedDate = formatDate(date); // 날짜 형식 변환
+            document.getElementById('successMessage').textContent = 
+                `${formattedDate}, ${time} 시간대에 예약이 성공적으로 완료되었습니다. 확인 이메일이 발송될 예정입니다. (실제 발송 기능은 미구현)`;
+            document.getElementById('successModal').classList.remove('hidden');
+        }
 
-    }); // DOMContentLoaded 끝
+        // 날짜 형식 변환 함수 (기존 코드 유지)
+        function formatDate(dateString) {
+            const date = new Date(dateString + 'T00:00:00'); // 시간대 문제 방지
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+            return `${year}년 ${month}월 ${day}일 (${dayOfWeek})`;
+        }
+
+        // 폼 초기화 함수 (기존 코드 유지, 숨겨진 필드 초기화 추가)
+        function resetForm() {
+            form.reset(); // 폼 요소들 초기화
+            document.getElementById('selectedDate').value = ''; // 숨겨진 필드 초기화
+            document.getElementById('selectedTime').value = '';
+            document.getElementById('selectedDateTime').value = '';
+            document.querySelectorAll('.time-slot').forEach(s => {
+                s.classList.remove('selected'); // 시간 슬롯 선택 해제
+            });
+             // 모든 에러 메시지 숨기기
+             form.querySelectorAll('.text-red-500').forEach(el => el.classList.add('hidden'));
+             form.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+        }
+    });
 </script>
 </body>
 </html>
