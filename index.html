@@ -483,61 +483,99 @@
              });
          });
 
-        // 예약 폼 제출 이벤트 (변경 없음 - 성공 시 로컬 업데이트는 유지)
+        // 예약 폼 제출 이벤트 (★★★ 수정된 버전 ★★★)
         const form = document.getElementById('registrationForm');
         const submitButton = form.querySelector('button[type="submit"]');
+
         form.addEventListener('submit', function(e) {
-             e.preventDefault();
-             if (!validateForm()) return;
+            e.preventDefault(); // 기본 제출 동작 방지
 
-             submitButton.disabled = true;
-             submitButton.textContent = '예약 처리 중...';
-             submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+            // 1. 유효성 검사
+            if (!validateForm()) {
+                return;
+            }
 
-             const formData = new FormData(form);
-             const emailToCheck = formData.get('email');
+            // 2. 제출 버튼 비활성화
+            submitButton.disabled = true;
+            submitButton.textContent = '예약 처리 중...';
+            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
 
-             // 클라이언트측 중복 확인 (선택사항)
-             if (isEmailAlreadyRegisteredLocally(emailToCheck)) {
-                  alert('이미 해당 이메일로 예약된 내역이 있는 것 같습니다. (브라우저 확인)');
-                  submitButton.disabled = false;
-                  submitButton.textContent = '예약하기';
-                  submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                  return;
-              }
+            // 3. 전송할 데이터를 JavaScript 객체로 만들기
+            const reservationData = {
+                selectedDate: document.getElementById('selectedDate').value,
+                selectedTime: document.getElementById('selectedTime').value,
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim()
+                // consent는 서버로 보낼 필요는 보통 없습니다.
+            };
 
-             fetch(SCRIPT_URL, { method: 'POST', body: formData })
-                 .then(response => response.json())
-                 .then(data => {
-                     console.log('Google Apps Script 응답:', data);
-                     if (data.result === "success") {
-                         // 성공 시 로컬 reservations 객체 즉시 업데이트 (UX 개선)
-                         const date = formData.get('selectedDate');
-                         const time = formData.get('selectedTime');
-                         if (reservations[date] && reservations[date][time]) {
-                              // 서버에서 실제 추가 성공했으므로, 로컬에도 반영
-                              reservations[date][time].push(null); // 더미 데이터 추가
-                              localStorage.setItem('eventReservations', JSON.stringify(reservations)); // 로컬 스토리지 저장
-                              console.log("예약 성공 후 로컬 데이터 업데이트 완료.");
-                              updateSlotStatus(); // UI 즉시 업데이트
-                          }
-                         showSuccessModal(date, time);
-                         resetForm();
-                     } else {
-                         console.error('Google Apps Script 오류:', data.message);
-                         alert(`예약 실패: ${data.message || '알 수 없는 서버 오류.'}`);
+            // (선택 사항) 클라이언트 측 이메일 중복 확인 로직은 그대로 둘 수 있습니다.
+            // if (isEmailAlreadyRegisteredLocally(reservationData.email)) { ... }
+
+            console.log("서버로 전송할 데이터:", reservationData); // 전송 직전 데이터 확인
+
+            // 4. fetch API를 사용하여 JSON 데이터 전송
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    // ★★★ Content-Type을 application/json으로 명시 ★★★
+                    'Content-Type': 'application/json',
+                    // 필요한 경우 다른 헤더 추가
+                },
+                // ★★★ JavaScript 객체를 JSON 문자열로 변환하여 body에 담기 ★★★
+                body: JSON.stringify(reservationData)
+            })
+            .then(response => {
+                // 응답 상태 코드로 1차 확인
+                 if (!response.ok) {
+                     // 서버에서 보낸 에러 메시지를 포함하여 오류 생성 시도
+                     return response.json().then(errData => {
+                          // 서버가 result:error 와 message 를 보낸 경우
+                         throw new Error(errData.message || `서버 응답 오류 (Status: ${response.status})`);
+                     }).catch(() => {
+                         // 서버가 JSON 에러 응답을 보내지 않은 경우 (예: 404, 500 등)
+                         throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`);
+                     });
+                 }
+                return response.json(); // 성공 시 JSON 파싱
+            })
+            .then(data => {
+                // 5. Apps Script 응답 처리
+                console.log('Google Apps Script 응답:', data);
+                if (data.result === "success") {
+                    // 5-1. 성공 처리 (로컬 상태 업데이트, UI 갱신, 모달 표시, 폼 리셋)
+                    const date = reservationData.selectedDate; // 보냈던 데이터 사용
+                    const time = reservationData.selectedTime;
+
+                    if (reservations[date] && reservations[date][time]) {
+                         reservations[date][time].push(null); // 로컬에 즉시 반영 (더미 데이터)
+                         localStorage.setItem('eventReservations', JSON.stringify(reservations));
+                         updateSlotStatus(); // UI 업데이트
                      }
-                 })
-                 .catch(error => {
-                     console.error('폼 제출 오류:', error);
-                     alert('예약 요청 중 네트워크 오류 발생.');
-                 })
-                 .finally(() => {
-                     submitButton.disabled = false;
-                     submitButton.textContent = '예약하기';
-                     submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                 });
-         });
+                    showSuccessModal(date, time);
+                    resetForm();
+                } else {
+                    // 5-2. 앱스 스크립트가 명시적으로 에러 반환 (예: 중복 이메일)
+                    console.error('Google Apps Script 처리 실패:', data.message);
+                    alert(`예약 실패: ${data.message || '알 수 없는 서버 오류.'}`);
+                }
+            })
+            .catch(error => {
+                // 6. 네트워크 오류 또는 fetch/then 처리 중 발생한 오류
+                console.error('폼 제출 또는 응답 처리 중 오류:', error);
+                alert(`예약 처리 중 오류가 발생했습니다: ${error.message}`);
+            })
+            .finally(() => {
+                // 7. 버튼 다시 활성화
+                submitButton.disabled = false;
+                submitButton.textContent = '예약하기';
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+        });
+
+        // --- 여기에 나머지 JavaScript 함수들 (fetchAndUpdateCounts, updateSlotStatus 등) ---
+        // ... (이전 답변의 나머지 JavaScript 코드는 그대로 유지) ...
 
         // --- 기존 함수들 (변경 필요 없음) ---
          function validateForm() { /* ... 기존 코드 ... */ return true; }
