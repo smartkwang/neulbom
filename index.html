@@ -340,7 +340,7 @@
         // --- 서버 통신 (Fetch API 사용) ---
         async function fetchSlotDataAndUpdateUI() {
             // console.log("Fetching slot data via Fetch API...");
-            if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL === 'https://script.google.com/macros/s/AKfycbwo85ZBGUH0lcjBhSYPa6NwIk_LWY6e4KCCpmRAgy0_zOvCTCB1vJ7UjQK_7FEF-kArhg/exec') {
+            if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL_HERE') {
                 console.error("Apps Script API URL is not configured.");
                 displayFormError("API URL이 설정되지 않았습니다. 관리자에게 문의하세요.");
                 return;
@@ -361,7 +361,7 @@
 
         async function submitRegistrationData(formData) {
             // console.log("Submitting via Fetch API:", formData);
-            if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL === 'https://script.google.com/macros/s/AKfycbwo85ZBGUH0lcjBhSYPa6NwIk_LWY6e4KCCpmRAgy0_zOvCTCB1vJ7UjQK_7FEF-kArhg/exec') {
+            if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL_HERE') {
                 console.error("Apps Script API URL is not configured.");
                 displayFormError("API URL이 설정되지 않았습니다. 관리자에게 문의하세요.");
                 return;
