@@ -1,11 +1,19 @@
 async function testDoGet() {
-    const testUrl = 'https://script.google.com/macros/s/AKfycbwo85ZBGUH0lcjBhSYPa6NwIk_LWY6e4KCCpmRAgy0_zOvCTCB1vJ7UjQK_7FEF-kArhg/exec'; // 테스트 파라미터 추가
+    // Apps Script 웹 앱 URL 뒤에 반드시 ?action=getSlotData 와 같은 쿼리 파라미터를 붙여야 합니다.
+    const testUrl = 'https://script.google.com/macros/s/AKfycbwo85ZBGUH0lcjBhSYPa6NwIk_LWY6e4KCCpmRAgy0_zOvCTCB1vJ7UjQK_7FEF-kArhg/exec?action=getSlotData&testParam=justForTesting'; // <--- 이렇게 쿼리 파라미터를 다시 추가!
     try {
         const res = await fetch(testUrl);
-        const data = await res.json();
-        console.log("Test doGet Response:", data);
+        // 응답이 JSON이 아닐 수도 있으니, 먼저 text로 받고 파싱 시도
+        const textData = await res.text();
+        console.log("Raw response text:", textData); // 원본 텍스트 응답 확인
+        try {
+            const jsonData = JSON.parse(textData);
+            console.log("Test doGet Response (parsed JSON):", jsonData);
+        } catch (parseError) {
+            console.error("Error parsing JSON from response:", parseError, "Original text:", textData);
+        }
     } catch (err) {
-        console.error("Error in testDoGet:", err);
+        console.error("Error in testDoGet (fetch failed):", err);
     }
 }
-testDoGet(); // 페이지 로드 시 또는 버튼 클릭 등으로 호출
+testDoGet();
