@@ -1,6 +1,6 @@
 // index.html의 JavaScript
 async function testDoGet() {
-    const testUrl = 'https://script.google.com/macros/s/AKfycbwo85ZBGUH0lcjBhSYPa6NwIk_LWY6e4KCCpmRAgy0_zOvCTCB1vJ7UjQK_7FEF-kArhg/exec?action=getSlotData&testParam=hello'; // 테스트 파라미터 추가
+    const testUrl = 'https://script.google.com/macros/s/AKfycbwo85ZBGUH0lcjBhSYPa6NwIk_LWY6e4KCCpmRAgy0_zOvCTCB1vJ7UjQK_7FEF-kArhg/exec'; // 테스트 파라미터 추가
     try {
         const res = await fetch(testUrl);
         const data = await res.json();
